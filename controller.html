@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Streamer Tool - Controller</title>
+    <script src="https://cdn.jsdelivr.net/npm/comfy.js@latest/dist/comfy.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #18181b; color: white; margin: 0; padding: 20px; }
+        .header { position: sticky; top: 0; background: #18181b; padding-bottom: 15px; z-index: 10; }
+        button { 
+            width: 100%; padding: 15px; background: #eb0400; color: white; 
+            border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem;
+        }
+        button:hover { background: #ff2a26; }
+        #chat { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .msg { 
+            padding: 15px; background: #26262c; border-radius: 6px; cursor: pointer; 
+            border-left: 5px solid transparent; transition: all 0.2s ease;
+        }
+        .msg:hover { background: #323239; border-left-color: #9147ff; transform: translateX(5px); }
+        .user { font-weight: bold; color: #bf94ff; display: block; margin-bottom: 4px; font-size: 0.9rem; }
+        .text { font-size: 1rem; line-height: 1.4; color: #efeff1; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button onclick="dismiss()">DISMISS CURRENT MESSAGE</button>
+    </div>
+    <div id="chat"></div>
+
+    <script>
+        // Use BroadcastChannel to talk to the overlay
+        const bc = new BroadcastChannel('twitch_highlight');
+
+        ComfyJS.onChat = (user, message, flags, self, extra) => {
+            const div = document.createElement("div");
+            div.className = "msg";
+            div.innerHTML = `<span class="user">${user}</span><span class="text">${message}</span>`;
+            
+            // When clicked, send the data to the overlay
+            div.onclick = () => {
+                bc.postMessage({ type: 'SHOW', user, message });
+            };
+            
+            const chatContainer = document.getElementById("chat");
+            chatContainer.prepend(div);
+
+            // Keep only the last 50 messages to prevent lag
+            if (chatContainer.children.length > 50) {
+                chatContainer.removeChild(chatContainer.lastChild);
+            }
+        };
+
+        function dismiss() {
+            bc.postMessage({ type: 'HIDE' });
+        }
+
+        // REPLACE WITH YOUR TWITCH USERNAME
+        ComfyJS.Init("MrsMothmom");
+    </script>
+</body>
+</html>
