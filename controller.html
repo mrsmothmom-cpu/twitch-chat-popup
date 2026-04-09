@@ -5,7 +5,9 @@
     <title>Streamer Tool - Controller</title>
     <script src="https://cdn.jsdelivr.net/npm/comfy.js@latest/dist/comfy.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #18181b; color: white; margin: 0; padding: 20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Alice&display=swap');
+
+        body { font-family: 'Alice', serif; background: #18181b; color: white; margin: 0; padding: 20px; }
         .header { position: sticky; top: 0; background: #18181b; padding-bottom: 15px; z-index: 10; }
         button { 
             width: 100%; padding: 15px; background: #eb0400; color: white; 
@@ -17,9 +19,9 @@
             padding: 15px; background: #26262c; border-radius: 6px; cursor: pointer; 
             border-left: 5px solid transparent; transition: all 0.2s ease;
         }
-        .msg:hover { background: #323239; border-left-color: #9147ff; transform: translateX(5px); }
-        .user { font-weight: bold; color: #bf94ff; display: block; margin-bottom: 4px; font-size: 0.9rem; }
-        .text { font-size: 1rem; line-height: 1.4; color: #efeff1; }
+        .msg:hover { background: #323239; border-left-color: #9147ff; }
+        .user { font-weight: bold; display: block; margin-bottom: 4px; }
+        .text { color: #efeff1; }
     </style>
 </head>
 <body>
@@ -29,26 +31,38 @@
     <div id="chat"></div>
 
     <script>
-        // Use BroadcastChannel to talk to the overlay
         const bc = new BroadcastChannel('twitch_highlight');
 
+        // This function ensures we ALWAYS have a valid CSS color
+        function getSafeColor(user, twitchColor) {
+            if (twitchColor && twitchColor !== "") return twitchColor;
+            
+            // Fallback: Generate a consistent color based on the username
+            let hash = 0;
+            for (let i = 0; i < user.length; i++) {
+                hash = user.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            // Returns a vibrant HSL color
+            return `hsl(${Math.abs(hash % 360)}, 70%, 45%)`;
+        }
+
         ComfyJS.onChat = (user, message, flags, self, extra) => {
+            const userColor = getSafeColor(user, extra.userColor);
+            
             const div = document.createElement("div");
             div.className = "msg";
-            div.innerHTML = `<span class="user">${user}</span><span class="text">${message}</span>`;
+            div.innerHTML = `
+                <span class="user" style="color: ${userColor} !important; text-shadow: 1px 1px 0px rgba(0,0,0,0.1);">${user}:</span> 
+                <span class="text">${message}</span>
+            `;
             
-            // When clicked, send the data to the overlay
             div.onclick = () => {
-                bc.postMessage({ type: 'SHOW', user, message });
+                bc.postMessage({ type: 'SHOW', user, message, color: userColor });
             };
             
             const chatContainer = document.getElementById("chat");
             chatContainer.prepend(div);
-
-            // Keep only the last 50 messages to prevent lag
-            if (chatContainer.children.length > 50) {
-                chatContainer.removeChild(chatContainer.lastChild);
-            }
+            if (chatContainer.children.length > 50) chatContainer.removeChild(chatContainer.lastChild);
         };
 
         function dismiss() {
