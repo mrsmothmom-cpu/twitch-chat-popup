@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap');
-        body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif; width: 1920px; height: 1080px; }
+        @import url('https://fonts.googleapis.com/css2?family=Alice&display=swap');
+        
+        body { margin: 0; padding: 0; overflow: hidden; font-family: 'Alice', serif; width: 1920px; height: 1080px; }
 
         #highlight-container {
             position: absolute;
@@ -37,6 +38,10 @@
             text-transform: uppercase;
             letter-spacing: -1px;
             margin-bottom: 10px;
+            /* This shadow ensures bright yellows/cyans are readable on #f1f1f1 */
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+            /* Optional: Subtle outline for extreme legibility */
+            -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.2);
         }
 
         #display-text {
@@ -73,13 +78,16 @@
         };
 
         function updateUI(data) {
-            // Apply text and the dynamic color
+            const userEl = document.getElementById('display-user');
+            const textEl = document.getElementById('display-text');
+            const container = document.getElementById('highlight-container');
+
             userEl.innerText = data.user;
-            userEl.style.color = data.color;
             textEl.innerText = data.message;
             
-            // Update the side bar color
-            container.style.borderLeftColor = data.color;
+            // Applying the color
+            userEl.style.setProperty('color', data.color, 'important');
+            container.style.setProperty('border-left-color', data.color, 'important');
             
             container.classList.add('active');
         }
